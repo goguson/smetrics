@@ -2,7 +2,8 @@ package noop
 
 import (
 	"context"
-	"smetrics"
+
+	"github.com/goguson/smetrics"
 
 	oteltrace "go.opentelemetry.io/otel/trace"
 )

@@ -1,7 +1,7 @@
 package noop
 
 import (
-	"smetrics"
+	"github.com/goguson/smetrics"
 
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
