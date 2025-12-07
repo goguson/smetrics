@@ -7,49 +7,44 @@ import (
 
 	"go.opentelemetry.io/contrib/bridges/otelslog"
 	otelmetric "go.opentelemetry.io/otel/metric"
+	"go.opentelemetry.io/otel/metric/noop"
 	"go.opentelemetry.io/otel/sdk/log"
 	"go.opentelemetry.io/otel/sdk/metric"
 	"go.opentelemetry.io/otel/sdk/trace"
 	oteltrace "go.opentelemetry.io/otel/trace"
 )
 
-// TelemetryProvider is an interface for the telemetry provider.
-type TelemetryProvider interface {
-	Log(ctx context.Context, level slog.Level, msg string, attrs ...slog.Attr)
-	NewMeterInt64Histogram(metric Metric) (Int64Histogram, error)
-	NewMeterInt64UpDownCounter(metric Metric) (Int64UpDownCounter, error)
-	Trace(ctx context.Context, name string) (context.Context, oteltrace.Span)
-	Shutdown(ctx context.Context)
-}
-
-// Telemetry is a wrapper around the OpenTelemetry logger, meter, and tracer.
-type Telemetry struct {
-	lp     *log.LoggerProvider
-	mp     *metric.MeterProvider
-	tp     *trace.TracerProvider
-	log    *slog.Logger
-	meter  otelmetric.Meter
-	tracer oteltrace.Tracer
-}
-
 // NewTelemetry creates a new telemetry instance.
-func NewTelemetry(ctx context.Context, name, version string) (*Telemetry, error) {
-	rp := newResource(name, version)
+func NewTelemetry(ctx context.Context, name, version string, opt ...Option) (*Telemetry, error) {
+	res := newResource(name, version)
 
-	lp, err := newLoggerGRPCProvider(ctx, rp)
+	t := &Telemetry{
+		lp:     nil,
+		mp:     nil,
+		tp:     nil,
+		log:    nil,
+		meter:  nil,
+		tracer: nil,
+	}
+
+	for _, o := range opt {
+		o(svr)
+	}
+
+	lp, err := NewLoggerHTTPProvider(ctx, res)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create logger: %w", err)
 	}
 
 	logger := otelslog.NewLogger(name, otelslog.WithLoggerProvider(lp))
 
-	mp, err := newMeterGRPCProvider(ctx, rp)
+	mp, err := NewMeterHTTPProvider(ctx, res)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create meter: %w", err)
 	}
 	meter := mp.Meter(name)
 
-	tp, err := newTracerGRPCProvider(ctx, rp)
+	tp, err := NewTracerHTTPProvider(ctx, res)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create tracer: %w", err)
 	}

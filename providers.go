@@ -6,9 +6,10 @@ import (
 	"os"
 
 	"go.opentelemetry.io/otel"
-	"go.opentelemetry.io/otel/exporters/otlp/otlplog/otlploggrpc"
-	"go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetricgrpc"
-	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc"
+	"go.opentelemetry.io/otel/exporters/otlp/otlplog/otlploghttp"
+	"go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetrichttp"
+	"go.opentelemetry.io/otel/exporters/otlp/otlptrace"
+	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp"
 	"go.opentelemetry.io/otel/sdk/log"
 	"go.opentelemetry.io/otel/sdk/metric"
 	"go.opentelemetry.io/otel/sdk/resource"
@@ -16,9 +17,9 @@ import (
 	semconv "go.opentelemetry.io/otel/semconv/v1.17.0"
 )
 
-// newLoggerGRPCProvider creates a new logger provider with the OTLP gRPC exporter.
-func newLoggerGRPCProvider(ctx context.Context, res *resource.Resource) (*log.LoggerProvider, error) {
-	exporter, err := otlploggrpc.New(ctx)
+// NewLoggerHTTPProvider creates a new logger provider with the OTLP HTTP exporter.
+func NewLoggerHTTPProvider(ctx context.Context, res *resource.Resource) (*log.LoggerProvider, error) {
+	exporter, err := otlploghttp.New(ctx, otlploghttp.WithInsecure())
 	if err != nil {
 		return nil, fmt.Errorf("failed to create OTLP log exporter: %w", err)
 	}
@@ -32,9 +33,9 @@ func newLoggerGRPCProvider(ctx context.Context, res *resource.Resource) (*log.Lo
 	return lp, nil
 }
 
-// newMeterGRPCProvider creates a new meter provider with the OTLP gRPC exporter.
-func newMeterGRPCProvider(ctx context.Context, res *resource.Resource) (*metric.MeterProvider, error) {
-	exporter, err := otlpmetricgrpc.New(ctx)
+// NewMeterHTTPProvider creates a new meter provider with the OTLP HTTP exporter.
+func NewMeterHTTPProvider(ctx context.Context, res *resource.Resource) (*metric.MeterProvider, error) {
+	exporter, err := otlpmetrichttp.New(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create OTLP metric exporter: %w", err)
 	}
@@ -48,14 +49,13 @@ func newMeterGRPCProvider(ctx context.Context, res *resource.Resource) (*metric.
 	return mp, nil
 }
 
-// newTracerGRPCProvider creates a new tracer provider with the OTLP gRPC exporter.
-func newTracerGRPCProvider(ctx context.Context, res *resource.Resource) (*trace.TracerProvider, error) {
-	exporter, err := otlptracegrpc.New(ctx)
+// NewTracerHTTPProvider creates a new tracer provider with the OTLP HTTP exporter.
+func NewTracerHTTPProvider(ctx context.Context, res *resource.Resource) (*trace.TracerProvider, error) {
+	exporter, err := otlptrace.New(ctx, otlptracehttp.NewClient())
 	if err != nil {
 		return nil, fmt.Errorf("failed to create OTLP trace exporter: %w", err)
 	}
 
-	// Create Resource
 	tp := trace.NewTracerProvider(
 		trace.WithBatcher(exporter),
 		trace.WithResource(res),
@@ -65,8 +65,8 @@ func newTracerGRPCProvider(ctx context.Context, res *resource.Resource) (*trace.
 	return tp, nil
 }
 
-// newResource creates a new OTEL resource with the service name and version.
-func newResource(serviceName string, serviceVersion string) *resource.Resource {
+// NewResource creates a new OTEL resource with the service name and version.
+func NewResource(serviceName string, serviceVersion string) *resource.Resource {
 	hostName, _ := os.Hostname()
 
 	return resource.NewWithAttributes(
