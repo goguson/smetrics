@@ -10,6 +10,7 @@ import (
 	"go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetrichttp"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp"
+	"go.opentelemetry.io/otel/log/global"
 	"go.opentelemetry.io/otel/sdk/log"
 	"go.opentelemetry.io/otel/sdk/metric"
 	"go.opentelemetry.io/otel/sdk/resource"
@@ -29,6 +30,7 @@ func NewLoggerHTTPProvider(ctx context.Context, res *resource.Resource) (*log.Lo
 		log.WithProcessor(processor),
 		log.WithResource(res),
 	)
+	global.SetLoggerProvider(lp)
 
 	return lp, nil
 }
