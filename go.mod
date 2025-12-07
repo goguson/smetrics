@@ -1,4 +1,4 @@
-module smetrics
+module github.com/goguson/smetrics
 
 go 1.25.5
 
