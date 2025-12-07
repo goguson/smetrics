@@ -2,6 +2,7 @@ package noop
 
 import (
 	"context"
+	"smetrics"
 
 	otelmetric "go.opentelemetry.io/otel/metric"
 )
